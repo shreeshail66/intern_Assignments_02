@@ -21,24 +21,14 @@ The deliverable is a fully documented Jupyter Notebook that:
 ```
 devrise-task1/
 ├── README.md
-├── generate_data.py                 # Script that generates the raw synthetic dataset
-├── build_notebook.py                # Script that programmatically builds the notebook
+├── generate_data.py                
+├── build_notebook.py               
 ├── data/
-│   ├── raw_retail_sales.csv         # Raw, uncleaned dataset (input)
-│   └── cleaned_retail_sales.csv     # Cleaned dataset (output of the notebook)
+│
 ├── notebooks/
-│   └── Task1_Data_Analysis_Visualization.ipynb   # Main deliverable notebook
+│   
 └── visuals/
-    ├── 01_monthly_revenue_trend.png
-    ├── 02_revenue_by_category.png
-    ├── 03_order_value_distribution.png
-    ├── 04_correlation_matrix.png
-    ├── 05_region_channel_breakdown.png
-    ├── 06_order_value_by_category_boxplot.png
-    ├── 07_rating_by_age_group.png
-    ├── 08_orders_by_weekday.png
-    ├── 09_payment_mode_share.png
-    └── 10_discount_vs_sales_scatter.png
+
 ```
 
 ## 3. Dataset
@@ -75,13 +65,10 @@ pip install pandas numpy matplotlib seaborn jupyter
 ### Running the project
 
 ```bash
-# 1. (Optional) regenerate the raw dataset
 python generate_data.py
 
-# 2. Launch the notebook
 jupyter notebook notebooks/Task1_Data_Analysis_Visualization.ipynb
 
-# 3. Run all cells (Cell -> Run All)
 ```
 
 Running the notebook will regenerate `data/cleaned_retail_sales.csv` and all PNG charts in
