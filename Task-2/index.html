@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="description" content="Meteorograph — a live atmospheric readout for any city on Earth." />
+<title>Meteorograph — Weather Instrument</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css" />
+</head>
+<body data-condition="clear" data-temp="mild" data-daytime="day">
+
+  <!-- Ambient instrument backdrop -->
+  <svg class="backdrop" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <defs>
+      <linearGradient id="skyGradient" x1="0" y1="0" x2="0" y2="1">
+        <stop class="sky-stop-1" offset="0%" />
+        <stop class="sky-stop-2" offset="100%" />
+      </linearGradient>
+      <filter id="mistBlur"><feGaussianBlur stdDeviation="18" /></filter>
+    </defs>
+
+    <rect class="sky" x="0" y="0" width="1440" height="900" fill="url(#skyGradient)" />
+
+    <g class="stars">
+      <!-- populated by JS -->
+    </g>
+
+    <g class="sun-group">
+      <circle class="sun-glow" cx="1180" cy="180" r="120" />
+      <circle class="sun-core" cx="1180" cy="180" r="58" />
+      <g class="sun-rays">
+        <line x1="1180" y1="40" x2="1180" y2="80" />
+        <line x1="1180" y1="280" x2="1180" y2="320" />
+        <line x1="1040" y1="180" x2="1080" y2="180" />
+        <line x1="1280" y1="180" x2="1320" y2="180" />
+        <line x1="1080" y1="80" x2="1108" y2="108" />
+        <line x1="1252" y1="252" x2="1280" y2="280" />
+        <line x1="1280" y1="80" x2="1252" y2="108" />
+        <line x1="1108" y1="252" x2="1080" y2="280" />
+      </g>
+    </g>
+
+    <g class="moon-group">
+      <circle class="moon-glow" cx="1180" cy="160" r="100" />
+      <circle class="moon-core" cx="1180" cy="160" r="46" />
+      <circle class="moon-crescent" cx="1200" cy="146" r="40" />
+    </g>
+
+    <g class="clouds">
+      <g class="cloud cloud-a" transform="translate(120,140)">
+        <ellipse cx="0" cy="20" rx="70" ry="30" />
+        <ellipse cx="55" cy="5" rx="55" ry="34" />
+        <ellipse cx="-60" cy="10" rx="48" ry="26" />
+      </g>
+      <g class="cloud cloud-b" transform="translate(650,90)">
+        <ellipse cx="0" cy="20" rx="90" ry="36" />
+        <ellipse cx="70" cy="0" rx="64" ry="40" />
+        <ellipse cx="-80" cy="12" rx="56" ry="30" />
+      </g>
+      <g class="cloud cloud-c" transform="translate(320,260)">
+        <ellipse cx="0" cy="16" rx="60" ry="26" />
+        <ellipse cx="46" cy="4" rx="44" ry="28" />
+      </g>
+    </g>
+
+    <g class="mist" filter="url(#mistBlur)">
+      <rect x="-100" y="520" width="1700" height="90" />
+      <rect x="-100" y="620" width="1700" height="70" />
+      <rect x="-100" y="710" width="1700" height="100" />
+    </g>
+
+    <g class="rain"><!-- populated by JS --></g>
+    <g class="snow"><!-- populated by JS --></g>
+    <g class="lightning-flash"></g>
+
+    <line class="horizon" x1="0" y1="620" x2="1440" y2="620" />
+  </svg>
+
+  <div class="scrim"></div>
+
+  <main class="app">
+
+    <header class="panel-header">
+      <p class="eyebrow">Live Atmospheric Readout</p>
+      <h1 class="wordmark">Meteorograph</h1>
+      <p class="subtitle">Point it at any city. It listens to the sky and reports back.</p>
+    </header>
+
+    <form id="searchForm" class="control-panel" autocomplete="off">
+      <label for="cityInput" class="visually-hidden">City name</label>
+      <div class="input-wrap">
+        <svg class="input-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.6"/>
+          <line x1="16.2" y1="16.2" x2="21" y2="21" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        </svg>
+        <input
+          id="cityInput"
+          type="text"
+          placeholder="Enter a city — Mysuru, Lisbon, Nagoya…"
+          aria-describedby="statusMessage"
+        />
+      </div>
+      <div class="control-buttons">
+        <button type="submit" class="btn btn-primary" id="submitBtn">
+          <span>Take reading</span>
+        </button>
+        <button type="button" class="btn btn-ghost" id="geoBtn" title="Use my current location">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            <circle cx="12" cy="12" r="6.5" stroke="currentColor" stroke-width="1.6"/>
+            <circle cx="12" cy="12" r="1.8" fill="currentColor"/>
+          </svg>
+          <span>My location</span>
+        </button>
+        <button type="button" class="btn btn-ghost unit-toggle" id="unitToggle" aria-pressed="false">
+          <span id="unitLabel">°C</span>
+        </button>
+      </div>
+    </form>
+
+    <p id="statusMessage" class="status" role="status" aria-live="polite"></p>
+
+    <!-- Loading skeleton -->
+    <section id="loadingState" class="reading-card loading-card" hidden aria-hidden="true">
+      <div class="skeleton skeleton-dial"></div>
+      <div class="skeleton-lines">
+        <div class="skeleton skeleton-line w70"></div>
+        <div class="skeleton skeleton-line w40"></div>
+        <div class="skeleton skeleton-grid">
+          <div class="skeleton skeleton-chip"></div>
+          <div class="skeleton skeleton-chip"></div>
+          <div class="skeleton skeleton-chip"></div>
+          <div class="skeleton skeleton-chip"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Error state -->
+    <section id="errorState" class="reading-card error-card" hidden>
+      <div class="error-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M12 3 2 20h20L12 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+          <line x1="12" y1="9.5" x2="12" y2="14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="12" cy="17" r="1" fill="currentColor"/>
+        </svg>
+      </div>
+      <div>
+        <p class="error-title" id="errorTitle">No signal from the sky.</p>
+        <p class="error-detail" id="errorDetail">Something went wrong.</p>
+      </div>
+    </section>
+
+    <!-- Result -->
+    <section id="resultState" class="reading-card result-card" hidden aria-live="polite">
+      <div class="result-top">
+        <div class="place">
+          <h2 id="cityName">—</h2>
+          <p id="placeMeta">—</p>
+        </div>
+        <div class="condition-tag" id="conditionTag">—</div>
+      </div>
+
+      <div class="dial-row">
+        <div class="dial">
+          <svg viewBox="0 0 220 220" class="dial-svg" aria-hidden="true">
+            <circle cx="110" cy="110" r="96" class="dial-track" />
+            <circle cx="110" cy="110" r="96" class="dial-progress" id="dialProgress" />
+          </svg>
+          <div class="dial-center">
+            <span class="dial-temp" id="tempReading">—</span>
+            <span class="dial-feels" id="feelsLike">feels like —</span>
+          </div>
+        </div>
+
+        <div class="weather-icon" id="weatherIcon" aria-hidden="true"></div>
+      </div>
+
+      <div class="readout-grid">
+        <div class="readout-chip">
+          <span class="chip-label">Humidity</span>
+          <span class="chip-value" id="humidityVal">—</span>
+        </div>
+        <div class="readout-chip">
+          <span class="chip-label">Wind</span>
+          <span class="chip-value" id="windVal">—</span>
+        </div>
+        <div class="readout-chip">
+          <span class="chip-label">Pressure</span>
+          <span class="chip-value" id="pressureVal">—</span>
+        </div>
+        <div class="readout-chip">
+          <span class="chip-label">Visibility</span>
+          <span class="chip-value" id="visibilityVal">—</span>
+        </div>
+        <div class="readout-chip">
+          <span class="chip-label">Sunrise</span>
+          <span class="chip-value" id="sunriseVal">—</span>
+        </div>
+        <div class="readout-chip">
+          <span class="chip-label">Sunset</span>
+          <span class="chip-value" id="sunsetVal">—</span>
+        </div>
+      </div>
+
+      <p class="updated-at" id="updatedAt">—</p>
+    </section>
+
+    <section class="recent-wrap" id="recentWrap" hidden>
+      <p class="recent-label">Recent readings</p>
+      <div class="recent-chips" id="recentChips"></div>
+    </section>
+
+    <footer class="app-footer">
+      <details class="key-panel">
+        <summary>API key setup</summary>
+        <p>Meteorograph reads data from OpenWeatherMap. Paste a free API key to activate live readings — it is stored only in this browser.</p>
+        <div class="key-form">
+          <input type="text" id="apiKeyInput" placeholder="Your OpenWeatherMap API key" autocomplete="off" spellcheck="false" />
+          <button type="button" id="saveKeyBtn" class="btn btn-primary btn-small">Save key</button>
+        </div>
+        <p class="key-hint">Get a free key at <a href="https://home.openweathermap.org/users/sign_up" target="_blank" rel="noopener">openweathermap.org</a>. New keys can take up to a couple of hours to activate.</p>
+      </details>
+      <p class="credit">Data via OpenWeatherMap · Built for the DevRise Internship Program</p>
+    </footer>
+
+  </main>
+
+  <script src="script.js" defer></script>
+</body>
+</html>
