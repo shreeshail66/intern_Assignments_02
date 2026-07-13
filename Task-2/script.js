@@ -170,12 +170,12 @@ els.unitToggle.addEventListener("click", () => {
    Fetching
    --------------------------------------------------------- */
 async function fetchWeatherByCity(city, apiKey) {
-  const url = `${OWM_BASE}?q=${encodeURIComponent(city)}&appid=${apiKey}&units=${state.unit}`;
+  const url = `${OWM_BASE}?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric`;
   return requestWeather(url);
 }
 
 async function fetchWeatherByCoords(lat, lon, apiKey) {
-  const url = `${OWM_BASE}?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${state.unit}`;
+  const url = `${OWM_BASE}?lat=${lat}&lon=${lon}&appid=${apiKey}&units=metric`;
   return requestWeather(url);
 }
 
@@ -301,8 +301,14 @@ function renderWeather(data) {
   const speedUnit = state.unit === "metric" ? "m/s" : "mph";
   const condition = data.weather?.[0]?.main || "Clear";
   const description = data.weather?.[0]?.description || condition;
-  const temp = Math.round(data.main.temp);
-  const feels = Math.round(data.main.feels_like);
+
+  const tempC = data.main.temp;
+  const feelsC = data.main.feels_like;
+  const windMs = data.wind?.speed;
+
+  const temp = Math.round(state.unit === "metric" ? tempC : cToF(tempC));
+  const feels = Math.round(state.unit === "metric" ? feelsC : cToF(feelsC));
+  const wind = windMs != null ? (state.unit === "metric" ? windMs : windMs * 2.23694) : null;
 
   els.cityName.textContent = data.name || "Unknown location";
   els.placeMeta.textContent = `${data.sys?.country || ""} · ${formatCoord(data.coord)}`;
@@ -312,7 +318,7 @@ function renderWeather(data) {
   els.feelsLike.textContent = `feels like ${feels}${tempUnit}`;
 
   els.humidityVal.textContent = `${data.main.humidity}%`;
-  els.windVal.textContent = `${data.wind?.speed ?? "—"} ${speedUnit}`;
+  els.windVal.textContent = wind != null ? `${wind.toFixed(1)} ${speedUnit}` : "—";
   els.pressureVal.textContent = `${data.main.pressure} hPa`;
   els.visibilityVal.textContent = data.visibility != null ? `${(data.visibility / 1000).toFixed(1)} km` : "—";
 
@@ -322,10 +328,14 @@ function renderWeather(data) {
 
   els.updatedAt.textContent = `Updated ${new Date().toLocaleTimeString()}`;
 
-  updateDial(temp);
+  updateDial(tempC);
   els.weatherIcon.innerHTML = getIconSvg(condition);
 
-  applyTheme({ condition, tempC: state.unit === "metric" ? temp : fToC(temp), data, tz });
+  applyTheme({ condition, tempC, data });
+}
+
+function cToF(c) {
+  return (c * 9) / 5 + 32;
 }
 
 function formatCoord(coord) {
@@ -338,10 +348,6 @@ function formatCoord(coord) {
 function formatTime(unixSeconds, tzOffsetSeconds) {
   const d = new Date((unixSeconds + tzOffsetSeconds) * 1000);
   return d.toUTCString().match(/\d\d:\d\d/)[0];
-}
-
-function fToC(f) {
-  return ((f - 32) * 5) / 9;
 }
 
 function updateDial(temp) {
