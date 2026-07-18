@@ -1,0 +1,7 @@
+{
+  "best_model": "Random Forest",
+  "test_accuracy": 0.9666666666666667,
+  "test_precision_macro": 0.9696969696969697,
+  "test_recall_macro": 0.9666666666666667,
+  "test_f1_macro": 0.9665831244778612
+}
